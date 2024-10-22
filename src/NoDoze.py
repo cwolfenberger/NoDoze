@@ -7,12 +7,16 @@ import threading
 import webbrowser
 import random
 import platform
+import signal
 
 from pystray import MenuItem as item
 from PIL import Image
 
 # Flag to keep track of whether the system is being kept awake
 active = True
+
+# Define the lock file path
+lockfile_path = "/tmp/nodoze.lock"
 
 def icon_image():
     # Use the correct path whether running as an executable or from source
@@ -74,11 +78,53 @@ def setup_system_tray():
     # Start the system tray icon
     icon.run()
 
+def check_single_instance():
+    if os.path.exists(lockfile_path):
+        # Read the PID from the lock file
+        with open(lockfile_path, 'r') as f:
+            pid = int(f.read())
+        
+        try:
+            # Check if the process is still running
+            os.kill(pid, 0)
+            print(f"NoDoze is already running with PID {pid}. Exiting this instance.")
+            sys.exit(0)
+        except OSError:
+            # Process does not exist, proceed with starting a new instance
+            pass
+
+    # Write the current PID to the lock file
+    with open(lockfile_path, 'w') as f:
+        f.write(str(os.getpid()))
+
+def remove_lockfile():
+    # Remove the lock file on exit
+    if os.path.exists(lockfile_path):
+        os.remove(lockfile_path)
+
 if __name__ == "__main__":
-    # Check if we are on macOS and apply macOS-specific settings
-    if platform.system() == 'Darwin':
-        # macOS-specific configuration (e.g., menu bar app tweaks) could go here
-        pass  # Nothing special is needed with pystray for macOS unless needed
+    # Check if we are on Windows and apply mutex for single instance
+    if platform.system() == "Windows":
+        # Use Windows-specific mutex method
+        import win32event
+        import win32api
+        import winerror
+
+        # Try to create a named mutex
+        handle = win32event.CreateMutex(None, False, "NoDozeMutex")
+
+        # Check if another instance is running
+        if win32api.GetLastError() == winerror.ERROR_ALREADY_EXISTS:
+            print("NoDoze is already running. Exiting this instance.")
+            sys.exit(0)  # Exit if the mutex already exists (another instance is running)
+    
+    # Check if we are on macOS or Linux and apply single instance lock via file
+    elif platform.system() == "Darwin" or platform.system() == "Linux":
+        check_single_instance()
+        # Ensure lockfile is removed on exit
+        signal.signal(signal.SIGTERM, lambda signum, frame: remove_lockfile())
+        signal.signal(signal.SIGINT, lambda signum, frame: remove_lockfile())
+        atexit.register(remove_lockfile)
 
     # Start the tray setup
     setup_system_tray()
