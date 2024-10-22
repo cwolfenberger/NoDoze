@@ -1,0 +1,3 @@
+([('NoDoze',
+   '/Users/cwolfenberger/Documents/NoDoze/dist/NoDoze',
+   'EXECUTABLE')],)

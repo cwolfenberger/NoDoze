@@ -2,15 +2,15 @@
 
 
 a = Analysis(
-    ['src\\NoDoze.py'],
+    ['src/NoDoze.py'],
     pathex=[],
     binaries=[],
-    datas=[('assets/icon.ico', 'assets')],
+    datas=[('assets/icon.icns', 'assets')],
     hiddenimports=['pystray', 'pyautogui'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['tkinter', 'numpy'],
+    excludes=[],
     noarchive=False,
     optimize=0,
 )
@@ -35,5 +35,11 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['assets\\icon.ico'],
+    icon=['assets/icon.icns'],
+)
+app = BUNDLE(
+    exe,
+    name='NoDoze.app',
+    icon='assets/icon.icns',
+    bundle_identifier=None,
 )
