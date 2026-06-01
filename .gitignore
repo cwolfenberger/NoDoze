@@ -1,0 +1,7 @@
+.venv-windows/
+.tmp-build-existing-spec/
+.tmp-dist-existing-spec/
+build/windows/
+dist/windows/
+__pycache__/
+
